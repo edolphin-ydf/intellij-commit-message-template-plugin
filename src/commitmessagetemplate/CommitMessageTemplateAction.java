@@ -48,18 +48,10 @@ public class CommitMessageTemplateAction extends AnAction implements DumbAware {
 
         Project project = e.getRequiredData(CommonDataKeys.PROJECT);
 
-        Test testView = new Test(project, this);
-        testView.show();
+        MessageSearcherGUI messageSearcherGUIView = new MessageSearcherGUI(project, this);
+        messageSearcherGUIView.show();
 
         checkinPanel.setCommitMessage(commitMessage);
-
-//        CommitMessageTemplateConfig config = CommitMessageTemplateConfig.getInstance(project);
-//
-//        if (config != null) {
-//            String commitMessage = config.getCommitMessage();
-//            if (!commitMessage.isEmpty()) {
-//            }
-//        }
     }
 
 
