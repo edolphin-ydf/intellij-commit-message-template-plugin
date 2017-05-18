@@ -38,6 +38,8 @@ import org.jetbrains.annotations.Nullable;
  */
 public class CommitMessageTemplateAction extends AnAction implements DumbAware {
 
+    String commitMessage;
+
     public void actionPerformed(AnActionEvent e) {
         final CommitMessageI checkinPanel = getCheckinPanel(e);
         if (checkinPanel == null) {
@@ -45,14 +47,19 @@ public class CommitMessageTemplateAction extends AnAction implements DumbAware {
         }
 
         Project project = e.getRequiredData(CommonDataKeys.PROJECT);
-        CommitMessageTemplateConfig config = CommitMessageTemplateConfig.getInstance(project);
 
-        if (config != null) {
-            String commitMessage = config.getCommitMessage();
-            if (!commitMessage.isEmpty()) {
-                checkinPanel.setCommitMessage(commitMessage);
-            }
-        }
+        Test testView = new Test(project, this);
+        testView.show();
+
+        checkinPanel.setCommitMessage(commitMessage);
+
+//        CommitMessageTemplateConfig config = CommitMessageTemplateConfig.getInstance(project);
+//
+//        if (config != null) {
+//            String commitMessage = config.getCommitMessage();
+//            if (!commitMessage.isEmpty()) {
+//            }
+//        }
     }
 
 
@@ -70,5 +77,13 @@ public class CommitMessageTemplateAction extends AnAction implements DumbAware {
             return commitMessageI;
         }
         return null;
+    }
+
+    public String getCommitMessage() {
+        return commitMessage;
+    }
+
+    public void setCommitMessage(String commitMessage) {
+        this.commitMessage = commitMessage;
     }
 }
