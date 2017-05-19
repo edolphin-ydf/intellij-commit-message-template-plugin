@@ -5,7 +5,9 @@ package commitmessagetemplate.network.redmine
  */
 class Status {
 
-    def id
+    long id
 
-    def name
+    String name
+
+    boolean is_closed
 }

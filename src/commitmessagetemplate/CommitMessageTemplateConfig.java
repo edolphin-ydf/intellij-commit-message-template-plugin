@@ -42,6 +42,13 @@ public class CommitMessageTemplateConfig implements PersistentStateComponent<Com
         this.cmState.template = template;
     }
 
+    public Long getDefaultToStatusId() {
+        return this.cmState.defaultToStatusId;
+    }
+
+    public void setDefaultToStatusId(Long defaultToStatusId) {
+        this.cmState.defaultToStatusId = defaultToStatusId;
+    }
 
 
     @Nullable
@@ -64,6 +71,7 @@ public class CommitMessageTemplateConfig implements PersistentStateComponent<Com
         public String host;
         public String key;
         public String template;
+        public Long defaultToStatusId;
 
     }
 }

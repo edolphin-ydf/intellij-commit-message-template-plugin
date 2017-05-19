@@ -7,6 +7,7 @@ import com.intellij.ui.components.JBList;
 import commitmessagetemplate.network.RpcUtils;
 import commitmessagetemplate.network.redmine.Issue;
 import commitmessagetemplate.network.redmine.IssuesResponse;
+import commitmessagetemplate.util.VelocityHelper;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
@@ -32,6 +33,7 @@ public class MessageSearcherGUI extends DialogWrapper implements ActionListener 
     private IssuesResponse issuesResponse;
 
     private CommitMessageTemplateAction action;
+    private CommitMessageTemplateConfig cfg;
 
     private List<String> texts = new ArrayList<String>();
 
@@ -105,6 +107,13 @@ public class MessageSearcherGUI extends DialogWrapper implements ActionListener 
             }
         });
 
+        searchServerBtn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                searchServer();
+            }
+        });
+
         searchButton.addActionListener(this);
         return panel1;
     }
@@ -138,7 +147,7 @@ public class MessageSearcherGUI extends DialogWrapper implements ActionListener 
     }
 
     private void initParameter() {
-        CommitMessageTemplateConfig cfg = CommitMessageTemplateConfig.getInstance(project);
+        cfg = CommitMessageTemplateConfig.getInstance(project);
         host = cfg.getHost();
         String key = cfg.getKey();
 
@@ -151,11 +160,6 @@ public class MessageSearcherGUI extends DialogWrapper implements ActionListener 
                     "You can find your API key on your account page ( /my/account ) when logged in, on the right-hand pane of the default layout.");
             return;
         }
-
-        if (!host.endsWith("/"))
-            host += "/";
-        if (!host.startsWith("http://"))
-            host = "http://" + host;
 
         parameter.put("key", key);
 
@@ -170,7 +174,8 @@ public class MessageSearcherGUI extends DialogWrapper implements ActionListener 
 
             texts.clear();
             for (Issue issue : issuesResponse.getIssues()) {
-                texts.add("#" + issue.getId() + "[" + issue.getTracker().getName() + "]:" + issue.getSubject());
+                texts.add(VelocityHelper.fromTemplate(cfg.getTemplate(), "issue", issue));
+//                texts.add("#" + issue.getId() + "[" + issue.getTracker().getName() + "]:" + issue.getSubject());
             }
             updateList(texts);
         });
