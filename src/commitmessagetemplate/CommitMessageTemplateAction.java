@@ -31,6 +31,8 @@ import com.intellij.openapi.project.DumbAware;
 import com.intellij.openapi.vcs.CommitMessageI;
 import com.intellij.openapi.vcs.VcsDataKeys;
 import com.intellij.openapi.vcs.ui.Refreshable;
+import commitmessagetemplate.network.redmine.Issue;
+import commitmessagetemplate.util.VelocityHelper;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -39,6 +41,8 @@ import org.jetbrains.annotations.Nullable;
 public class CommitMessageTemplateAction extends AnAction implements DumbAware {
 
     String commitMessage;
+
+    Issue issue;
 
     public void actionPerformed(AnActionEvent e) {
         final CommitMessageI checkinPanel = getCheckinPanel(e);
@@ -51,6 +55,9 @@ public class CommitMessageTemplateAction extends AnAction implements DumbAware {
         MessageSearcherGUI messageSearcherGUIView = new MessageSearcherGUI(project, this);
         messageSearcherGUIView.show();
 
+        CommitMessageTemplateConfig cfg = CommitMessageTemplateConfig.getInstance(project);
+        if (cfg.getTemplate() != null && !cfg.getTemplate().equals(""))
+            commitMessage = VelocityHelper.fromTemplate(cfg.getTemplate(), "issue", issue);
         checkinPanel.setCommitMessage(commitMessage);
     }
 
@@ -77,5 +84,13 @@ public class CommitMessageTemplateAction extends AnAction implements DumbAware {
 
     public void setCommitMessage(String commitMessage) {
         this.commitMessage = commitMessage;
+    }
+
+    public Issue getIssue() {
+        return issue;
+    }
+
+    public void setIssue(Issue issue) {
+        this.issue = issue;
     }
 }
