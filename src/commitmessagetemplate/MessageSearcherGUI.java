@@ -1,5 +1,6 @@
 package commitmessagetemplate;
 
+import com.intellij.ide.BrowserUtil;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.ui.components.JBList;
@@ -9,8 +10,6 @@ import commitmessagetemplate.network.redmine.IssuesResponse;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.ArrayList;
@@ -87,6 +86,9 @@ public class MessageSearcherGUI extends DialogWrapper implements ActionListener 
                     action.setCommitMessage(obj.toString());
                     action.setIssue(issuesResponse.getIssues().get(index));
                     MessageSearcherGUI.this.close(0);
+                } else if (e.getClickCount() == 1 && e.isControlDown()){
+                    int index = list1.getSelectedIndex();    //已选项的下标
+                    BrowserUtil.browse(host + "issues/" + issuesResponse.getIssues().get(index).getId());
                 }
             }
         });
@@ -167,8 +169,7 @@ public class MessageSearcherGUI extends DialogWrapper implements ActionListener 
             issuesResponse = RpcUtils.getResponseFromServerGET(host + "issues.json",  IssuesResponse.class, parameter);
 
             texts.clear();
-            for (int i = 0; i < issuesResponse.getTotal_count(); i++) {
-                Issue issue = issuesResponse.getIssues().get(i);
+            for (Issue issue : issuesResponse.getIssues()) {
                 texts.add("#" + issue.getId() + "[" + issue.getTracker().getName() + "]:" + issue.getSubject());
             }
             updateList(texts);
