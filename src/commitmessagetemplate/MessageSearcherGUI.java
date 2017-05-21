@@ -29,6 +29,7 @@ public class MessageSearcherGUI extends DialogWrapper implements ActionListener 
     private JButton searchButton;
     private JCheckBox assignedToMe;
     private JButton searchServerBtn;
+    private JCheckBox whetherChangeStatus;
 
     private IssuesResponse issuesResponse;
 
@@ -87,6 +88,8 @@ public class MessageSearcherGUI extends DialogWrapper implements ActionListener 
                     Object obj = myList.getModel().getElementAt(index);  //取出数据
                     action.setCommitMessage(obj.toString());
                     action.setIssue(issuesResponse.getIssues().get(index));
+                    cfg.setCurrentIssue(issuesResponse.getIssues().get(index));
+                    cfg.setChangeStatus(whetherChangeStatus.isSelected());
                     MessageSearcherGUI.this.close(0);
                 } else if (e.getClickCount() == 1 && e.isControlDown()){
                     int index = list1.getSelectedIndex();    //已选项的下标
@@ -106,6 +109,17 @@ public class MessageSearcherGUI extends DialogWrapper implements ActionListener 
                 searchServer();
             }
         });
+
+//        whetherChangeStatus.addItemListener(new ItemListener() {
+//            @Override
+//            public void itemStateChanged(ItemEvent e) {
+//                if (whetherChangeStatus.isSelected()) {
+//                    cfg.setChangeStatus(true);
+//                } else {
+//                    cfg.setChangeStatus(false);
+//                }
+//            }
+//        });
 
         searchServerBtn.addActionListener(new ActionListener() {
             @Override
@@ -133,6 +147,8 @@ public class MessageSearcherGUI extends DialogWrapper implements ActionListener 
         Object obj = list1.getModel().getElementAt(index);
         action.setCommitMessage(obj.toString());
         action.setIssue(issuesResponse.getIssues().get(index));
+        cfg.setCurrentIssue(issuesResponse.getIssues().get(index));
+        cfg.setChangeStatus(whetherChangeStatus.isSelected());
         super.doOKAction();
     }
 

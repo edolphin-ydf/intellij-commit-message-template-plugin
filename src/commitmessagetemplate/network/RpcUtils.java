@@ -1,13 +1,12 @@
 package commitmessagetemplate.network;
 
 import com.alibaba.fastjson.JSON;
+import com.intellij.util.Url;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.*;
+import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.Map;
@@ -67,6 +66,46 @@ public class RpcUtils {
             return builder.toString();
         } catch (Exception e) {
             logger.error("get response from server fail", e);
+            return null;
+        } finally {
+            try {
+                if (out != null)
+                    out.close();
+                if (br != null)
+                    br.close();
+            } catch (IOException e) {
+                logger.error("get response from server, close stream fail.", e);
+            }
+        }
+    }
+
+    public static String getResponseFromServerPUT(String url, String param) {
+        OutputStreamWriter out = null;
+        BufferedReader br = null;
+        try {
+            URL realUrl = new URL(url);
+            HttpURLConnection httpCon = (HttpURLConnection) realUrl.openConnection();
+            httpCon.setRequestProperty("Content-Type", "application/json;charset=UTF-8");
+            httpCon.setDoOutput(true);
+            httpCon.setDoInput(true);
+            httpCon.setRequestMethod("PUT");
+
+            out = new OutputStreamWriter(
+                    httpCon.getOutputStream());
+            out.write(param);
+            out.close();
+
+            br = new BufferedReader(new InputStreamReader(httpCon.getInputStream()));
+
+            StringBuilder builder = new StringBuilder();
+            String line;
+            while ((line = br.readLine() ) != null)
+                builder.append(line);
+
+            br.close();
+            return builder.toString();
+        } catch (Exception e) {
+            logger.error("", e);
             return null;
         } finally {
             try {
@@ -170,5 +209,25 @@ public class RpcUtils {
             }
         }
         return host + action + "?key=" + key;
+    }
+
+
+
+
+    // PUT
+    public static <T> T getResponseFromServerPUT(String url, Class<T> clazz, String body) {
+        String responseBody = RpcUtils.getResponseFromServerPUT(url, body);
+        if (responseBody == null)
+            return null;
+
+        return JSON.parseObject(responseBody, clazz);
+    }
+
+    public static <T> T getResponseFromServerPUT(String url, Class<T> clazz, BaseJsonRequest request) {
+        return getResponseFromServerPUT(url, clazz, request.toJsonString());
+    }
+
+    public static void PUT(String url, BaseJsonRequest request) {
+        getResponseFromServerPUT(url, request.toJsonString());
     }
 }

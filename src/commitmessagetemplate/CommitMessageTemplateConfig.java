@@ -6,6 +6,7 @@ import com.intellij.openapi.components.State;
 import com.intellij.openapi.components.Storage;
 import com.intellij.openapi.project.Project;
 import commitmessagetemplate.CommitMessageTemplateConfig.CommitState;
+import commitmessagetemplate.network.redmine.Issue;
 import org.jetbrains.annotations.Nullable;
 
 
@@ -17,6 +18,10 @@ import org.jetbrains.annotations.Nullable;
 public class CommitMessageTemplateConfig implements PersistentStateComponent<CommitState> {
 
     private CommitState cmState = new CommitState();
+
+    private boolean changeStatus = false;
+
+    private Issue currentIssue = null;
 
     public String getHost() {
         return cmState.host;
@@ -50,6 +55,21 @@ public class CommitMessageTemplateConfig implements PersistentStateComponent<Com
         this.cmState.defaultToStatusId = defaultToStatusId;
     }
 
+    public boolean isChangeStatus() {
+        return changeStatus;
+    }
+
+    public void setChangeStatus(boolean changeStatus) {
+        this.changeStatus = changeStatus;
+    }
+
+    public Issue getCurrentIssue() {
+        return currentIssue;
+    }
+
+    public void setCurrentIssue(Issue currentIssue) {
+        this.currentIssue = currentIssue;
+    }
 
     @Nullable
     @Override
