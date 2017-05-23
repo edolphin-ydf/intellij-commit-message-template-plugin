@@ -44,6 +44,8 @@
         <projectService serviceInterface="commitmessagetemplate.CommitMessageTemplateConfig" serviceImplementation="commitmessagetemplate.CommitMessageTemplateConfig"/>
 
         <checkinHandlerFactory implementation="commitmessagetemplate.RedmineCheckinHandlerFactory"/>
+
+        <postStartupActivity implementation="commitmessagetemplate.RedmineIssuseBackgroundNotifier"/>
     </extensions>
 
 </idea-plugin>

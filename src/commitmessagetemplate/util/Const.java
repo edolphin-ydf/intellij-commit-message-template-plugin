@@ -1,5 +1,7 @@
 package commitmessagetemplate.util;
 
+import java.nio.charset.Charset;
+
 /**
  * Created by Arsen on 04.09.2016.
  */
@@ -7,6 +9,12 @@ public interface Const {
 
     boolean IS_DEBUG = true;
     boolean SHOULD_LOG_TO_NOTIFICATION = false;
+
+
+    interface charsets {
+        Charset UTF_8 = Charset.forName("UTF-8");
+        Charset ISO_8859_1 = Charset.forName("ISO-8859-1");
+    }
 
 //    String EXPORT_FILE_NAME = "Templates.json";
 //    String ACTION_PREFIX = "pt.action.";

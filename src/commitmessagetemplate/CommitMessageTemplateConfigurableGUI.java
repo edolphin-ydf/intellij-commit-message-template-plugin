@@ -1,17 +1,20 @@
 package commitmessagetemplate;
 
 import com.intellij.openapi.project.Project;
+import com.intellij.util.ui.CheckBox;
 import commitmessagetemplate.network.RpcUtils;
 import commitmessagetemplate.network.redmine.IssueStatusesResponse;
 import commitmessagetemplate.network.redmine.Status;
 
 import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Created by matan.goren on 23-Sep-16.
@@ -26,12 +29,15 @@ public class CommitMessageTemplateConfigurableGUI {
     private JLabel templateLabel;
     private JComboBox statusSelector;
     private JLabel statusesListLabel;
+    private JPanel statusCheckPannel;
     private CommitMessageTemplateConfig config;
 
     boolean statusSelectorInited = false;
 
     IssueStatusesResponse statusesResponse;
     Long selectedStatus;
+
+    private List<JCheckBox> statusCheckBoxes = new ArrayList<>();
 
     void createUI(Project project) {
         config = CommitMessageTemplateConfig.getInstance(project);
@@ -94,7 +100,30 @@ public class CommitMessageTemplateConfigurableGUI {
         return !host.getText().equals(config.getHost()) ||
                 !key.getText().equals(config.getKey()) ||
                 !template.getText().equals(config.getTemplate()) ||
-                (selectedStatus != null && !selectedStatus.equals(config.getDefaultToStatusId()));
+                (selectedStatus != null && !selectedStatus.equals(config.getDefaultToStatusId())) ||
+                isGetNotifyStatusIdsModified()
+                ;
+    }
+
+    boolean isGetNotifyStatusIdsModified() {
+        List<Long> newIds = getNotifyStatusIds();
+        List<Long> added = newIds.stream().filter(id -> !config.getNotifyStatusIds().contains(id)).collect(Collectors.toList());
+        if (added.isEmpty()) {
+            List<Long> removed = config.getNotifyStatusIds().stream().filter(id -> !newIds.contains(id)).collect(Collectors.toList());
+            if (removed.isEmpty())
+                return false;
+        }
+        return true;
+    }
+
+    List<Long> getNotifyStatusIds() {
+        List<Long> newIds = new ArrayList<>();
+        for (int i = 0; i < statusCheckBoxes.size(); i++) {
+            JCheckBox box = statusCheckBoxes.get(i);
+            if (box.isSelected())
+                newIds.add(statusesResponse.getIssue_statuses().get(i).getId());
+        }
+        return newIds;
     }
 
     void apply() {
@@ -103,6 +132,7 @@ public class CommitMessageTemplateConfigurableGUI {
         config.setTemplate(template.getText());
         if (selectedStatus != null)
             config.setDefaultToStatusId(selectedStatus);
+        config.setNotifyStatusIds(getNotifyStatusIds());
         fixHost();
     }
 
@@ -115,6 +145,14 @@ public class CommitMessageTemplateConfigurableGUI {
         if (!config.getHost().startsWith("http://"))
             config.setHost("http://" + config.getHost());
         host.setText(config.getHost());
+
+        for (int i = 0; i < statusCheckBoxes.size(); i++) {
+            JCheckBox box = statusCheckBoxes.get(i);
+            if (config.getNotifyStatusIds().contains(statusesResponse.getIssue_statuses().get(i).getId()))
+                box.setSelected(true);
+            else
+                box.setSelected(false);
+        }
     }
 
     void reset() {
@@ -172,6 +210,17 @@ public class CommitMessageTemplateConfigurableGUI {
                 statusSelector.setModel(jListModel);
                 if (idx != -1)
                     statusSelector.setSelectedIndex(idx);
+
+                statusCheckPannel.setLayout(new GridLayout(4, texts.size() / 4));
+                for (int i = 0; i < texts.size(); i++) {
+                    String text = texts.get(i);
+                    JCheckBox checkBox = new JCheckBox(text);
+                    statusCheckBoxes.add(checkBox);
+                    statusCheckPannel.add(checkBox);
+
+                    if (config.getNotifyStatusIds().contains(statusesResponse.getIssue_statuses().get(i).getId()))
+                        checkBox.setSelected(true);
+                }
             }
         });
     }

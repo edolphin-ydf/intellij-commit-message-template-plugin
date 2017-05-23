@@ -9,6 +9,10 @@ import commitmessagetemplate.CommitMessageTemplateConfig.CommitState;
 import commitmessagetemplate.network.redmine.Issue;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 
 @State(
         name = "CommitMessageTemplateConfig",
@@ -71,6 +75,16 @@ public class CommitMessageTemplateConfig implements PersistentStateComponent<Com
         this.currentIssue = currentIssue;
     }
 
+    public List<Long> getNotifyStatusIds() {
+        if (this.cmState.getNotifyStatusIds == null)
+            return Collections.EMPTY_LIST;
+        return this.cmState.getNotifyStatusIds;
+    }
+
+    public void setNotifyStatusIds(List<Long> ids) {
+        this.cmState.getNotifyStatusIds = ids;
+    }
+
     @Nullable
     @Override
     public CommitState getState() {
@@ -92,6 +106,6 @@ public class CommitMessageTemplateConfig implements PersistentStateComponent<Com
         public String key;
         public String template;
         public Long defaultToStatusId;
-
+        public List<Long> getNotifyStatusIds = new ArrayList<>();
     }
 }

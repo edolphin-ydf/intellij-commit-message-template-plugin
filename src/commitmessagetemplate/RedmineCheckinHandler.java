@@ -30,6 +30,8 @@ public class RedmineCheckinHandler extends CheckinHandler {
                     UpdateIssueRequest request = new UpdateIssueRequest();
                     request.getIssue().setStatus_id(cfg.getDefaultToStatusId());
                     RpcUtils.PUT(cfg.getHost() + "issues/" + cfg.getCurrentIssue().getId()+ ".json?key=" + cfg.getKey(), request);
+                    cfg.setCurrentIssue(null);
+                    cfg.setChangeStatus(false);
                 }
             })).start();
         }

@@ -8,7 +8,7 @@ import commitmessagetemplate.util.VelocityHelper
  */
 class Issue {
 
-    def id
+    Long id
 
     Project project
 
@@ -28,9 +28,9 @@ class Issue {
 
     def done_ratio
 
-    def create_on
+    Date created_on
 
-    def updated_on
+    Date updated_on
 
     com.intellij.openapi.project.Project ideaProject
 
