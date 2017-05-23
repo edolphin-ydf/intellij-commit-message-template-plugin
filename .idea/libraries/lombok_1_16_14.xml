@@ -1,0 +1,12 @@
+<component name="libraryTable">
+  <library name="lombok-1.16.14">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.16.14/lombok-1.16.14.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/com/alibaba/fastjson/1.2.20/fastjson-1.2.20.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/alibaba/fastjson/1.2.20/fastjson-1.2.20-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

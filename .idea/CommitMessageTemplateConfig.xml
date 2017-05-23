@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="CommitMessageTemplateConfig">
-    <option name="manualTemplate" value="123&#10;123&#10;456" />
+    <option name="host" value="http://192.168.2.231/redmine" />
+    <option name="key" value="9b56b8a5bcd0fafd124c5df5593d6e6569fce105" />
+    <option name="template" value="#${issue.id}:[${issue.tracker.name}][${issue.status.name}]:${issue.subject}" />
   </component>
 </project>
