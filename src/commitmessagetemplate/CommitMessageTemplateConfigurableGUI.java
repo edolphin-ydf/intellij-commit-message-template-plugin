@@ -2,7 +2,6 @@ package commitmessagetemplate;
 
 import com.intellij.openapi.project.Project;
 import commitmessagetemplate.network.RpcUtils;
-import commitmessagetemplate.network.redmine.Issue;
 import commitmessagetemplate.network.redmine.IssueStatusesResponse;
 import commitmessagetemplate.network.redmine.Status;
 
@@ -114,7 +113,7 @@ public class CommitMessageTemplateConfigurableGUI {
         if (!config.getHost().endsWith("/"))
             config.setHost(config.getHost() + "/");
         if (!config.getHost().startsWith("http://"))
-            config.setHost("http://" + host);
+            config.setHost("http://" + config.getHost());
         host.setText(config.getHost());
     }
 

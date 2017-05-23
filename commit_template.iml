@@ -11,5 +11,6 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" exported="" name="intellij-commit-message-template-plugin" level="application" />
     <orderEntry type="library" name="lombok-1.16.14" level="project" />
+    <orderEntry type="library" name="fastjson-1.2.20" level="project" />
   </component>
 </module>

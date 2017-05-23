@@ -42,6 +42,8 @@
     <extensions defaultExtensionNs="com.intellij">
         <projectConfigurable groupId="tools" displayName="Commit Message Template" id="preferences.CommitMessageTemplateConfigurable" instance="commitmessagetemplate.CommitMessageTemplateConfigurable" />
         <projectService serviceInterface="commitmessagetemplate.CommitMessageTemplateConfig" serviceImplementation="commitmessagetemplate.CommitMessageTemplateConfig"/>
+
+        <checkinHandlerFactory implementation="commitmessagetemplate.RedmineCheckinHandlerFactory"/>
     </extensions>
 
 </idea-plugin>
