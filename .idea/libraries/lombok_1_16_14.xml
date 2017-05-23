@@ -4,5 +4,6 @@
       <root url="jar://$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.16.14/lombok-1.16.14.jar!/" />
     </CLASSES>
     <JAVADOC />
+    <SOURCES />
   </library>
 </component>
