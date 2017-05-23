@@ -66,7 +66,7 @@ public class RedmineIssuseBackgroundNotifier implements StartupActivity {
                         if (needSave)
                             NotifiedIssuesManager.save();
                     } catch (Throwable e) {
-                        NotificationHelper.error("", e.toString());
+//                        NotificationHelper.error("", e.toString());
                         continue;
                     }
                 }
