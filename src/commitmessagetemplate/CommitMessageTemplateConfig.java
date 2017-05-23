@@ -83,7 +83,7 @@ public class CommitMessageTemplateConfig implements PersistentStateComponent<Com
     }
 
     @Nullable
-    static CommitMessageTemplateConfig getInstance(Project project) {
+    public static CommitMessageTemplateConfig getInstance(Project project) {
         return ServiceManager.getService(project, CommitMessageTemplateConfig.class);
     }
 

@@ -11,6 +11,10 @@ import commitmessagetemplate.util.VelocityHelper;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.ArrayList;
@@ -36,8 +40,6 @@ public class MessageSearcherGUI extends DialogWrapper implements ActionListener 
     private CommitMessageTemplateAction action;
     private CommitMessageTemplateConfig cfg;
 
-    private List<String> texts = new ArrayList<String>();
-
     private String host;
     private Map parameter = new HashMap();
 
@@ -61,13 +63,10 @@ public class MessageSearcherGUI extends DialogWrapper implements ActionListener 
         super(canBeParent);
     }
 
-    private void updateList(List<String> texts) {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                ListModel jListModel =  new DefaultComboBoxModel(texts.toArray());
-                list1.setModel(jListModel);
-            }
+    private void updateList(List<Issue> issues) {
+        SwingUtilities.invokeLater(() -> {
+            ListModel jListModel =  new DefaultComboBoxModel(issues.toArray());
+            list1.setModel(jListModel);
         });
     }
 
@@ -77,67 +76,74 @@ public class MessageSearcherGUI extends DialogWrapper implements ActionListener 
     @Override
     protected JComponent createCenterPanel() {
 
-        updateList(texts);
-
         list1.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
+                JList myList = (JList) e.getSource();
+                int index = myList.getSelectedIndex();    //已选项的下标
+                Object obj = myList.getModel().getElementAt(index);  //取出数据
+                Issue issue = (Issue) obj;
+
                 if (e.getClickCount() == 2) {
-                    JList myList = (JList) e.getSource();
-                    int index = myList.getSelectedIndex();    //已选项的下标
-                    Object obj = myList.getModel().getElementAt(index);  //取出数据
                     action.setCommitMessage(obj.toString());
-                    action.setIssue(issuesResponse.getIssues().get(index));
-                    cfg.setCurrentIssue(issuesResponse.getIssues().get(index));
+
+                    action.setIssue(issue);
+                    cfg.setCurrentIssue(issue);
                     cfg.setChangeStatus(whetherChangeStatus.isSelected());
                     MessageSearcherGUI.this.close(0);
                 } else if (e.getClickCount() == 1 && e.isControlDown()){
-                    int index = list1.getSelectedIndex();    //已选项的下标
-                    BrowserUtil.browse(host + "issues/" + issuesResponse.getIssues().get(index).getId());
+                    BrowserUtil.browse(host + "issues/" + issue.getId());
                 }
             }
         });
 
-        assignedToMe.addItemListener(new ItemListener() {
-            @Override
-            public void itemStateChanged(ItemEvent e) {
-                if (assignedToMe.isSelected()) {
-                    parameter.put(KEY_ASSIGNED_TO_ID, "me");
-                } else {
-                    parameter.remove(KEY_ASSIGNED_TO_ID);
-                }
-                searchServer();
+        assignedToMe.addItemListener(e -> {
+            if (assignedToMe.isSelected()) {
+                parameter.put(KEY_ASSIGNED_TO_ID, "me");
+            } else {
+                parameter.remove(KEY_ASSIGNED_TO_ID);
             }
+            searchServer();
         });
 
-//        whetherChangeStatus.addItemListener(new ItemListener() {
-//            @Override
-//            public void itemStateChanged(ItemEvent e) {
-//                if (whetherChangeStatus.isSelected()) {
-//                    cfg.setChangeStatus(true);
-//                } else {
-//                    cfg.setChangeStatus(false);
-//                }
-//            }
-//        });
-
-        searchServerBtn.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                searchServer();
-            }
-        });
+        searchServerBtn.addActionListener(e -> searchServer());
 
         searchButton.addActionListener(this);
+
+        textField1.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                doSearch();
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                doSearch();
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                doSearch();
+            }
+
+            public void doSearch() {
+                doNativeSearch();
+            }
+        });
         return panel1;
+    }
+
+    private void doNativeSearch() {
+        final String pattern = textField1.getText();
+        List<Issue> filtered = issuesResponse.getIssues().stream().filter(i -> i.toString().contains(pattern)).collect(Collectors.toList());
+        ListModel jListModel =  new DefaultComboBoxModel(filtered.toArray());
+        list1.setModel(jListModel);
     }
 
     @Override
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == searchButton) {
-            final String pattern = textField1.getText();
-            List<String> filtered = texts.stream().filter(t -> t.contains(pattern)).collect(Collectors.toList());
-            updateList(filtered);
+            doNativeSearch();
         }
     }
 
@@ -145,9 +151,10 @@ public class MessageSearcherGUI extends DialogWrapper implements ActionListener 
     protected void doOKAction() {
         int index = list1.getSelectedIndex();
         Object obj = list1.getModel().getElementAt(index);
+        Issue issue = (Issue)obj;
         action.setCommitMessage(obj.toString());
-        action.setIssue(issuesResponse.getIssues().get(index));
-        cfg.setCurrentIssue(issuesResponse.getIssues().get(index));
+        action.setIssue(issue);
+        cfg.setCurrentIssue(issue);
         cfg.setChangeStatus(whetherChangeStatus.isSelected());
         super.doOKAction();
     }
@@ -186,14 +193,9 @@ public class MessageSearcherGUI extends DialogWrapper implements ActionListener 
 
     private void searchServer() {
         Thread thread = new Thread(() -> {
-            issuesResponse = RpcUtils.getResponseFromServerGET(host + "issues.json",  IssuesResponse.class, parameter);
-
-            texts.clear();
-            for (Issue issue : issuesResponse.getIssues()) {
-                texts.add(VelocityHelper.fromTemplate(cfg.getTemplate(), "issue", issue));
-//                texts.add("#" + issue.getId() + "[" + issue.getTracker().getName() + "]:" + issue.getSubject());
-            }
-            updateList(texts);
+            setIssuesResponse(RpcUtils.getResponseFromServerGET(host + "issues.json",  IssuesResponse.class, parameter));
+            getIssuesResponse().getIssues().forEach(i -> i.setIdeaProject(project));
+            updateList(getIssuesResponse().getIssues());
         });
         thread.start();
     }
