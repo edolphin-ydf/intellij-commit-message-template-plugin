@@ -5,6 +5,8 @@ import com.intellij.openapi.vcs.changes.CommitContext;
 import com.intellij.openapi.vcs.checkin.CheckinHandler;
 import commitmessagetemplate.network.RpcUtils;
 import commitmessagetemplate.network.redmine.UpdateIssueRequest;
+import commitmessagetemplate.platform.redmine.RedmineConfigurable;
+import commitmessagetemplate.platform.redmine.RuntimeData;
 
 /**
  * Created by edolphin on 20/05/2017.
@@ -23,16 +25,23 @@ public class RedmineCheckinHandler extends CheckinHandler {
     @Override
     public void checkinSuccessful() {
         CommitMessageTemplateConfig cfg = CommitMessageTemplateConfig.getInstance(checkinProjectPanel.getProject());
-        if (cfg.getDefaultToStatusId() != null && cfg.isChangeStatus()) {
-            (new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    UpdateIssueRequest request = new UpdateIssueRequest();
-                    request.getIssue().setStatus_id(cfg.getDefaultToStatusId());
-                    RpcUtils.PUT(cfg.getHost() + "issues/" + cfg.getCurrentIssue().getId()+ ".json?key=" + cfg.getKey(), request);
-                    cfg.setCurrentIssue(null);
-                    cfg.setChangeStatus(false);
-                }
+        RedmineConfigurable rc = (RedmineConfigurable)cfg.getCommitState().getConfig();
+        IssueTrackerPlatformCenter center = IssueTrackerPlatformCenter.getInstance(checkinProjectPanel.getProject());
+        String platform = cfg.getCommitState().selectedPlatform;
+
+        if (platform.isEmpty() || platform.equals(RedmineConfigurable.PlatformName))
+            return;
+        RuntimeData runtimeData = (RuntimeData)center.getRuntimeData(platform);
+        if (runtimeData == null)
+            return;
+
+        if (rc.getDefaultToStatusId() != null && runtimeData.isChangeStatus()) {
+            (new Thread(() -> {
+                UpdateIssueRequest request = new UpdateIssueRequest();
+                request.getIssue().setStatus_id(rc.getDefaultToStatusId());
+                RpcUtils.PUT(rc.getHost() + "issues/" + runtimeData.getCurrentIssue().getId()+ ".json?key=" + rc.getKey(), request);
+                runtimeData.setCurrentIssue(null);
+                runtimeData.setChangeStatus(false);
             })).start();
         }
     }

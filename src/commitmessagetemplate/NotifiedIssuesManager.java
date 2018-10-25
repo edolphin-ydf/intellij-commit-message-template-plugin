@@ -22,11 +22,12 @@ public class NotifiedIssuesManager {
 
 
     public static void addNotifiedIssue(Issue issue) {
-        getNotifiedIssues().notifiedIssues.add(new NotifiedIssues.NotifiedIssue(issue.getId(), issue.getStatus().getId()));
+//        getNotifiedIssues().notifiedIssues.add(new NotifiedIssues.NotifiedIssue(issue.getId(), issue.getStatus().getId()));
     }
 
     public static boolean isIssueNotified(Issue issue) {
-        return getNotifiedIssues().notifiedIssues.contains(new NotifiedIssues.NotifiedIssue(issue.getId(), issue.getStatus().getId()));
+//        return getNotifiedIssues().notifiedIssues.contains(new NotifiedIssues.NotifiedIssue(issue.getId(), issue.getStatus().getId()));
+        return true;
     }
 
     public static void load() {

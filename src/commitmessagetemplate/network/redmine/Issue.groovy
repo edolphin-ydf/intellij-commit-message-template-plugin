@@ -6,7 +6,7 @@ import commitmessagetemplate.util.VelocityHelper
 /**
  * Created by edolphin on 17-5-19.
  */
-class Issue {
+class Issue implements commitmessagetemplate.domain.Issue {
 
     Long id
 
@@ -35,8 +35,22 @@ class Issue {
     com.intellij.openapi.project.Project ideaProject
 
     @Override
-    public String toString() {
-        CommitMessageTemplateConfig cfg = CommitMessageTemplateConfig.getInstance(ideaProject);
-        return VelocityHelper.fromTemplate(cfg.getTemplate(), "issue", this);
+    String toString() {
+        CommitMessageTemplateConfig cfg = CommitMessageTemplateConfig.getInstance(ideaProject)
+        String template = cfg.getState().getConfig().getTemplate()
+        return VelocityHelper.fromTemplate(template, "issue", this)
+    }
+
+    String getId() {
+        return id
+    }
+
+
+    String getTitle() {
+        return subject
+    }
+
+    String getContent() {
+        return description
     }
 }

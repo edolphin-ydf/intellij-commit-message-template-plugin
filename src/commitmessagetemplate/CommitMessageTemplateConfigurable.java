@@ -52,8 +52,7 @@ public class CommitMessageTemplateConfigurable implements SearchableConfigurable
     @Override
     public JComponent createComponent() {
         gui = new CommitMessageTemplateConfigurableGUI();
-        gui.createUI(project);
-        return gui.getRootPanel();
+        return gui.createUI(project);
     }
 
     @Override

@@ -41,11 +41,13 @@
 
     <extensions defaultExtensionNs="com.intellij">
         <projectConfigurable groupId="tools" displayName="Commit Message Template" id="preferences.CommitMessageTemplateConfigurable" instance="commitmessagetemplate.CommitMessageTemplateConfigurable" />
-        <projectService serviceInterface="commitmessagetemplate.CommitMessageTemplateConfig" serviceImplementation="commitmessagetemplate.CommitMessageTemplateConfig"/>
+        <projectService serviceInterface="commitmessagetemplate.CommitMessageTemplateConfig" serviceImplementation="commitmessagetemplate.impl.CommitMessageTemplateConfigImpl"/>
 
         <checkinHandlerFactory implementation="commitmessagetemplate.RedmineCheckinHandlerFactory"/>
 
         <postStartupActivity implementation="commitmessagetemplate.RedmineIssuseBackgroundNotifier"/>
+        <projectService serviceInterface="commitmessagetemplate.IssueTrackerPlatformCenter"
+                        serviceImplementation="commitmessagetemplate.impl.IssueTrackerPlatformCenterImpl"/>
     </extensions>
 
 </idea-plugin>

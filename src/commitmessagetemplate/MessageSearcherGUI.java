@@ -1,27 +1,22 @@
 package commitmessagetemplate;
 
-import com.intellij.ide.BrowserUtil;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.ui.components.JBList;
-import commitmessagetemplate.network.RpcUtils;
-import commitmessagetemplate.network.redmine.Issue;
-import commitmessagetemplate.network.redmine.IssuesResponse;
-import commitmessagetemplate.util.VelocityHelper;
+import commitmessagetemplate.domain.Issue;
+import commitmessagetemplate.platform.IssueManager;
+import commitmessagetemplate.platform.NeedUpdateIssueData;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import java.awt.*;
-import java.awt.event.*;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * Created by edolphin on 17-5-18.
@@ -35,32 +30,29 @@ public class MessageSearcherGUI extends DialogWrapper implements ActionListener 
     private JButton searchServerBtn;
     private JCheckBox whetherChangeStatus;
 
-    private IssuesResponse issuesResponse;
-
     private CommitMessageTemplateAction action;
     private CommitMessageTemplateConfig cfg;
+    private Object platformRuntimeData;
+    private Object platformCfg;
 
-    private String host;
-    private Map parameter = new HashMap();
+    private IssueManager issueManager;
 
     private Project project;
 
-    private static String KEY_ASSIGNED_TO_ID= "assigned_to_id";
-
     public MessageSearcherGUI(@Nullable Project project, CommitMessageTemplateAction action) {
         super(project);
+        super.init();
+
         this.project = project;
         this.action = action;
         this.setModal(true);
 
-        this.initParameter();
-        this.searchServer();
+        this.cfg = CommitMessageTemplateConfig.getInstance(project);
+        this.platformCfg = this.cfg.getCommitState().getConfig();
+        this.platformRuntimeData = IssueTrackerPlatformCenter.getInstance(project).getRuntimeData(this.cfg.getCommitState().selectedPlatform);
 
-        init();
-    }
-
-    public MessageSearcherGUI(boolean canBeParent) {
-        super(canBeParent);
+        this.issueManager = IssueManager.newIssueManager(this.cfg.getCommitState().selectedPlatform);
+        this.issueManager.init(project, this.cfg.getCommitState(), new IssueManager.Option(), this::updateList);
     }
 
     private void updateList(List<Issue> issues) {
@@ -88,25 +80,24 @@ public class MessageSearcherGUI extends DialogWrapper implements ActionListener 
                     action.setCommitMessage(obj.toString());
 
                     action.setIssue(issue);
-                    cfg.setCurrentIssue(issue);
-                    cfg.setChangeStatus(whetherChangeStatus.isSelected());
+
+                    if (platformRuntimeData instanceof NeedUpdateIssueData) {
+                        NeedUpdateIssueData d = (NeedUpdateIssueData)platformRuntimeData;
+                        d.setCurrentIssue(issue);
+                        d.setChangeStatus(whetherChangeStatus.isSelected());
+                    }
                     MessageSearcherGUI.this.close(0);
                 } else if (e.getClickCount() == 1 && e.isControlDown()){
-                    BrowserUtil.browse(host + "issues/" + issue.getId());
+//                    BrowserUtil.browse(host + "issues/" + issue.getId());
                 }
             }
         });
 
         assignedToMe.addItemListener(e -> {
-            if (assignedToMe.isSelected()) {
-                parameter.put(KEY_ASSIGNED_TO_ID, "me");
-            } else {
-                parameter.remove(KEY_ASSIGNED_TO_ID);
-            }
-            searchServer();
+            issueManager.refreshIssues((new IssueManager.OptionBuilder()).SetAssignToMe(assignedToMe.isSelected()).build(), this::updateList);
         });
 
-        searchServerBtn.addActionListener(e -> searchServer());
+        searchServerBtn.addActionListener(e -> issueManager.refreshIssues(this::updateList));
 
         searchButton.addActionListener(this);
 
@@ -135,7 +126,7 @@ public class MessageSearcherGUI extends DialogWrapper implements ActionListener 
 
     private void doNativeSearch() {
         final String pattern = textField1.getText();
-        List<Issue> filtered = issuesResponse.getIssues().stream().filter(i -> i.toString().contains(pattern)).collect(Collectors.toList());
+        List<Issue> filtered = issueManager.getIssues(i -> i.toString().contains(pattern));
         ListModel jListModel =  new DefaultComboBoxModel(filtered.toArray());
         list1.setModel(jListModel);
     }
@@ -154,8 +145,11 @@ public class MessageSearcherGUI extends DialogWrapper implements ActionListener 
         Issue issue = (Issue)obj;
         action.setCommitMessage(obj.toString());
         action.setIssue(issue);
-        cfg.setCurrentIssue(issue);
-        cfg.setChangeStatus(whetherChangeStatus.isSelected());
+        if (platformRuntimeData instanceof NeedUpdateIssueData) {
+            NeedUpdateIssueData d = (NeedUpdateIssueData)platformRuntimeData;
+            d.setCurrentIssue(issue);
+            d.setChangeStatus(whetherChangeStatus.isSelected());
+        }
         super.doOKAction();
     }
 
@@ -167,45 +161,6 @@ public class MessageSearcherGUI extends DialogWrapper implements ActionListener 
     @Override
     public void doCancelAction(AWTEvent source) {
         super.doCancelAction(source);
-    }
-
-    private void initParameter() {
-        cfg = CommitMessageTemplateConfig.getInstance(project);
-        host = cfg.getHost();
-        String key = cfg.getKey();
-
-        if (host == null || host.equals("")) {
-            JOptionPane.showMessageDialog(null, "please set host first, in File->Settings->Tools->Commit Message Template");
-            return;
-        }
-        if (key == null || key.equals("")) {
-            JOptionPane.showMessageDialog(null, "please set redmine api key first, in File->Settings->Tools->Commit Message Template. " +
-                    "You can find your API key on your account page ( /my/account ) when logged in, on the right-hand pane of the default layout.");
-            return;
-        }
-
-        parameter.put("key", key);
-
-        if (assignedToMe.isSelected()) {
-            parameter.put(KEY_ASSIGNED_TO_ID, "me");
-        }
-    }
-
-    private void searchServer() {
-        Thread thread = new Thread(() -> {
-            setIssuesResponse(RpcUtils.getResponseFromServerGET(host + "issues.json",  IssuesResponse.class, parameter));
-            getIssuesResponse().getIssues().forEach(i -> i.setIdeaProject(project));
-            updateList(getIssuesResponse().getIssues());
-        });
-        thread.start();
-    }
-
-    synchronized public IssuesResponse getIssuesResponse() {
-        return issuesResponse;
-    }
-
-    synchronized public void setIssuesResponse(IssuesResponse issuesResponse) {
-        this.issuesResponse = issuesResponse;
     }
 }
 
